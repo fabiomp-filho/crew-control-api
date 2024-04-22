@@ -1,4 +1,4 @@
-package br.com.crewcontrolapi.repository;
+package br.com.crewcontrolapi.repositories;
 
 import br.com.crewcontrolapi.domain.entities.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
