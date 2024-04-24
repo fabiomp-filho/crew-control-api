@@ -44,7 +44,7 @@ public class User implements Serializable, UserDetails {
     private String lastName;
 
     @Email(message = "Informe um e-mail válido")
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Pattern(regexp = "^(\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2})|(\\d{11})$", message = "Informe um CPF válido!")

@@ -3,12 +3,15 @@ package br.com.crewcontrolapi.controllers;
 import br.com.crewcontrolapi.domain.dto.user.UserDTO;
 import br.com.crewcontrolapi.domain.dto.user.UserInfoDTO;
 import br.com.crewcontrolapi.domain.dto.user.UserLoginDTO;
+import br.com.crewcontrolapi.domain.dto.user.UserRegistrationDTO;
 import br.com.crewcontrolapi.domain.entities.user.User;
 import br.com.crewcontrolapi.infra.security.TokenService;
 import br.com.crewcontrolapi.services.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,8 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "/auth", produces = {"application/json"})
@@ -36,24 +37,27 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserLoginDTO userLoginDTO) {
+    public ResponseEntity<?> login(@Valid @RequestBody UserLoginDTO userLoginDTO) {
 
-        Optional<UserDTO> userOptional = userService.getUser(userLoginDTO.getLogin());
-
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Falha na autenticação: Credenciais inválidas");
-        }
-
-        UserDTO userLogged = userOptional.get();
         UsernamePasswordAuthenticationToken usernamePassword = new UsernamePasswordAuthenticationToken(userLoginDTO.getLogin(), userLoginDTO.getPassword());
 
         try {
             Authentication auth = this.authenticationManager.authenticate(usernamePassword);
             String token = tokenService.generateToken((User) auth.getPrincipal());
+            UserDTO userLogged = userService.getUser(userLoginDTO.getLogin());
             UserInfoDTO userInfo = new UserInfoDTO(token, userLogged);
             return ResponseEntity.ok(userInfo);
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Falha na autenticação: " + e.getMessage());
         }
+    }
+
+    @PostMapping("/register")
+    @PreAuthorize("hasAnyRole('Administrator','Leader')")
+    public ResponseEntity<?> register(@Valid @RequestBody UserRegistrationDTO userRegistrationDTO) {
+
+        userService.saveUser(userRegistrationDTO);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body("Usuário criado com sucesso!");
     }
 }
