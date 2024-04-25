@@ -30,22 +30,23 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-        String requestToken = request.getHeader("Authorization");
+        String requestToken = recoverToken(request);
 
-        if (requestToken != null && requestToken.startsWith("Bearer ")) {
-            var token = requestToken.substring(7);
+        if (requestToken != null) {
             try {
-                if (tokenService.validateToken(token)) {
-                    Authentication authentication = TokenService.getAuthentication(token);
+                if (tokenService.validateToken(requestToken)) {
+                    Authentication authentication = TokenService.getAuthentication(requestToken);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } else {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Token inválido");
-                    return;
+                    throw new ServletException("Token inválido ou expirado");
                 }
-            } catch (Exception e) {
+            } catch (ServletException e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Não autorizado devido ao token inválido: " + e.getMessage());
+                response.getWriter().write("Erro de autenticação: " + e.getMessage());
+                return;
+            } catch (Exception e) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response.getWriter().write("Erro interno do servidor: " + e.getMessage());
                 return;
             }
         }

@@ -7,6 +7,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,7 +29,7 @@ public class TokenService {
     private void init() {
         Algorithm algorithm = Algorithm.HMAC256(secret);
         verifier = JWT.require(algorithm)
-                .withIssuer("crew-control-api")  // Verifica se o issuer é o esperado
+                .withIssuer("crew-control-api")
                 .build();
     }
 
@@ -39,6 +40,7 @@ public class TokenService {
                     .withIssuer("crew-control-api")
                     .withSubject(user.getEmail())
                     .withExpiresAt(generateExpirationDate())
+                    .withClaim("role", String.valueOf(user.getRole()))
                     .sign(algorithm);
         } catch (JWTCreationException e) {
             throw new RuntimeException("Error while generating token", e);
@@ -54,6 +56,18 @@ public class TokenService {
         }
     }
 
+    public String getUserRole(String token) {
+        DecodedJWT jwt = JWT.decode(token);
+        String username = jwt.getSubject();
+        return jwt.getClaim("role").asString();
+    }
+
+    public String recoverToken(HttpServletRequest request) {
+        var authHeader = request.getHeader("Authorization");
+        if (authHeader == null) return null;
+        return authHeader.replace("Bearer ", "");
+    }
+
     public boolean validateToken(String token) {
         try {
             verifier.verify(token);
@@ -66,10 +80,12 @@ public class TokenService {
     public static UsernamePasswordAuthenticationToken getAuthentication(String token) {
         DecodedJWT jwt = JWT.decode(token);
         String username = jwt.getSubject();
-        String role = jwt.getClaim("role").asString(); // Assume que a claim é chamada "role"
+        String role = jwt.getClaim("role").asString();
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
         return new UsernamePasswordAuthenticationToken(username, null, Collections.singletonList(authority));
+
     }
+
 
     private Instant generateExpirationDate() {
         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));

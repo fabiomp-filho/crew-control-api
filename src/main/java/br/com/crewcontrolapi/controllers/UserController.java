@@ -8,10 +8,10 @@ import br.com.crewcontrolapi.domain.entities.user.User;
 import br.com.crewcontrolapi.infra.security.TokenService;
 import br.com.crewcontrolapi.services.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -53,10 +53,11 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    @PreAuthorize("hasAnyRole('Administrator','Leader')")
-    public ResponseEntity<?> register(@Valid @RequestBody UserRegistrationDTO userRegistrationDTO) {
+    public ResponseEntity<?> register(@Valid @RequestBody UserRegistrationDTO userRegistrationDTO, HttpServletRequest request) {
+        String token = tokenService.recoverToken(request);
+        String role = tokenService.getUserRole(token);
 
-        userService.saveUser(userRegistrationDTO);
+        userService.saveUser(userRegistrationDTO, role);
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Usuário criado com sucesso!");
     }

@@ -27,11 +27,9 @@ public class UserRegistrationDTO {
     @Cpf
     private String cpf;
 
-    @Min(value = 8, message = "A senha deve possuir pelo menos 8 digitos!")
-    @NotBlank(message = "Senha não pode estar vazia!")
+    @Size(min = 8, message = "A senha deve possuir pelo menos 8 digitos!")
     private String password;
 
-    @NotNull(message = "A função do usuário deve estar entre os valores válidos!")
     private RoleEnum role;
 
     @NotNull(message = "A data de nascimento não pode estar vazia!")

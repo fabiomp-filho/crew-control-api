@@ -3,6 +3,8 @@ package br.com.crewcontrolapi.services;
 import br.com.crewcontrolapi.domain.dto.user.UserDTO;
 import br.com.crewcontrolapi.domain.dto.user.UserRegistrationDTO;
 import br.com.crewcontrolapi.domain.entities.user.User;
+import br.com.crewcontrolapi.enums.RoleEnum;
+import br.com.crewcontrolapi.exception.BusinessException;
 import br.com.crewcontrolapi.mapper.UserMapper;
 import br.com.crewcontrolapi.repositories.UserRepository;
 import jakarta.transaction.Transactional;
@@ -42,7 +44,15 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public void saveUser(UserRegistrationDTO userRegistrationDTO) {
+    public void saveUser(UserRegistrationDTO userRegistrationDTO, String role) {
+
+        if (role.equals(String.valueOf(RoleEnum.LEADER)) && userRegistrationDTO.getRole() == RoleEnum.LEADER) {
+            throw new BusinessException("Líderes não podem cadastrar outros líderes!");
+        }
+
+        if (userRegistrationDTO.getRole() == RoleEnum.ADMINISTRATOR) {
+            throw new BusinessException("Nenhum usuário pode cadastrar um administrador!");
+        }
 
         User entityToSave = UserMapper.toEntity(userRegistrationDTO, passwordEncoder);
         userRepository.save(entityToSave);

@@ -17,6 +17,7 @@ public class UserDTO {
     private String lastName;
     private String email;
     private String cpf;
+
     private RoleEnum role;
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate birthdate;

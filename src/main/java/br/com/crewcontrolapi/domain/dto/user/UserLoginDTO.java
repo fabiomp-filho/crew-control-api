@@ -1,8 +1,6 @@
 package br.com.crewcontrolapi.domain.dto.user;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,11 +9,11 @@ import lombok.Data;
 @Builder
 @AllArgsConstructor
 public class UserLoginDTO {
-    @Email
-    @NotNull(message = "Login não pode estar vazio")
+
+    @NotBlank(message = "Login não pode estar vazio!")
+    @Email(message = "Login deve ser um e-mail válido!")
     private String login;
 
-    @Min(8)
-    @NotNull(message = "Senha não pode estar vazia")
+    @Size(min = 8, message = "Senha deve ter 8 ou mais caracteres!")
     private String password;
 }
