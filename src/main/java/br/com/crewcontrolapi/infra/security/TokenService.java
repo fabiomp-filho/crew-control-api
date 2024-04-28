@@ -41,6 +41,7 @@ public class TokenService {
                     .withSubject(user.getEmail())
                     .withExpiresAt(generateExpirationDate())
                     .withClaim("role", String.valueOf(user.getRole()))
+                    .withClaim("id", user.getId())
                     .sign(algorithm);
         } catch (JWTCreationException e) {
             throw new RuntimeException("Error while generating token", e);
@@ -58,8 +59,12 @@ public class TokenService {
 
     public String getUserRole(String token) {
         DecodedJWT jwt = JWT.decode(token);
-        String username = jwt.getSubject();
         return jwt.getClaim("role").asString();
+    }
+
+    public String getUserId(String token) {
+        DecodedJWT jwt = JWT.decode(token);
+        return jwt.getClaim("id").asString();
     }
 
     public String recoverToken(HttpServletRequest request) {

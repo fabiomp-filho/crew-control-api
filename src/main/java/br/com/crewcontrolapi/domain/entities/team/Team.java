@@ -23,7 +23,8 @@ public class Team implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "team_seq_generator")
+    @SequenceGenerator(name = "team_seq_generator", sequenceName = "team_seq", allocationSize = 1)
     @Column(nullable = false)
     private Long id;
 

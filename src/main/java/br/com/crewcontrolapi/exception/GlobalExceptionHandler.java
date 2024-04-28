@@ -91,6 +91,16 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<String> handleAccessDeniedException(IllegalStateException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleAccessDeniedException(IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleException(Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno do servidor: " + e.getClass());
@@ -110,7 +120,7 @@ public class GlobalExceptionHandler {
         if (e.getCause() != null && e.getCause().getMessage() != null) {
             String message = e.getCause().getMessage();
 
-            Pattern pattern = Pattern.compile("Invalid role value: (.+)");
+            Pattern pattern = Pattern.compile("Valor de função inválida\\s*:\\s*(.+)");
             Matcher matcher = pattern.matcher(message);
 
             if (matcher.find()) {

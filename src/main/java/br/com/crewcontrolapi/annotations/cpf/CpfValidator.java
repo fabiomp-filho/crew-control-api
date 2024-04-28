@@ -16,10 +16,8 @@ public class CpfValidator implements ConstraintValidator<Cpf, String> {
     private boolean isCpfValid(String cpf) {
         cpf = cpf.replace(".", "").replace("-", "");
 
-        // Verifica se o CPF tem 11 dígitos após a remoção de pontos e traços
         if (cpf.length() != 11 || cpf.matches(cpf.charAt(0) + "{11}")) return false;
 
-        // Calcula o primeiro dígito verificador
         int sum = 0;
         for (int i = 0; i < 9; i++) {
             sum += Integer.parseInt(cpf.substring(i, i + 1)) * (10 - i);

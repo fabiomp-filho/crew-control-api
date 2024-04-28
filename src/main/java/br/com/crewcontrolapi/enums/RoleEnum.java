@@ -21,7 +21,7 @@ public enum RoleEnum {
                 return role;
             }
         }
-        throw new IllegalArgumentException("Invalid role value: " + value);
+        throw new IllegalArgumentException("Valor de função inválida : " + value);
     }
 
     @JsonValue

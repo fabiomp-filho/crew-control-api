@@ -2,17 +2,19 @@ package br.com.crewcontrolapi.services;
 
 import br.com.crewcontrolapi.domain.dto.user.UserDTO;
 import br.com.crewcontrolapi.domain.dto.user.UserRegistrationDTO;
+import br.com.crewcontrolapi.domain.dto.user.UserUpdateDTO;
 import br.com.crewcontrolapi.domain.entities.user.User;
 import br.com.crewcontrolapi.enums.RoleEnum;
 import br.com.crewcontrolapi.exception.BusinessException;
 import br.com.crewcontrolapi.mapper.UserMapper;
 import br.com.crewcontrolapi.repositories.UserRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -43,7 +45,7 @@ public class UserService implements UserDetailsService {
         return UserMapper.toDTO(user);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public void saveUser(UserRegistrationDTO userRegistrationDTO, String role) {
 
         if (role.equals(String.valueOf(RoleEnum.LEADER)) && userRegistrationDTO.getRole() == RoleEnum.LEADER) {
@@ -53,8 +55,39 @@ public class UserService implements UserDetailsService {
         if (userRegistrationDTO.getRole() == RoleEnum.ADMINISTRATOR) {
             throw new BusinessException("Nenhum usuário pode cadastrar um administrador!");
         }
-
         User entityToSave = UserMapper.toEntity(userRegistrationDTO, passwordEncoder);
         userRepository.save(entityToSave);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
+    public void updateUser(Long id, UserUpdateDTO userUpdateDTO, User requestingUser) {
+
+        User userToUpdate = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com o ID: " + id));
+
+        boolean isRoleChangeAttempt = !userToUpdate.getRole().equals(userUpdateDTO.getRole());
+
+        if (userUpdateDTO.getRole().equals(RoleEnum.ADMINISTRATOR) && !userToUpdate.getRole().equals(RoleEnum.ADMINISTRATOR)) {
+            throw new IllegalStateException("Não é possível cadastrar administradores!");
+        }
+        if (requestingUser.getRole().equals(RoleEnum.ADMINISTRATOR)) {
+            if (userToUpdate.getRole().equals(RoleEnum.ADMINISTRATOR) && !userToUpdate.getEmail().equals(requestingUser.getEmail())) {
+                throw new IllegalStateException("Administradores não podem mudar a informação de outros administradores.");
+            }
+            User updatedUser = UserMapper.toUpdateAdmin(userToUpdate, userUpdateDTO);
+            userRepository.save(updatedUser);
+            return;
+        }
+
+        if (requestingUser.getId().equals(userToUpdate.getId())) {
+            if (isRoleChangeAttempt) {
+                throw new IllegalStateException("Você não tem permissão para mudar roles.");
+            }
+            User updatedUser = UserMapper.toUpdate(userToUpdate, userUpdateDTO);
+            userRepository.save(updatedUser);
+            return;
+        }
+
+        throw new IllegalStateException("Operação não permitida");
     }
 }

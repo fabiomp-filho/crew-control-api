@@ -17,7 +17,8 @@ import java.util.Objects;
 public class TaskHistory {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "task_history_seq_generator")
+    @SequenceGenerator(name = "task_history_seq_generator", sequenceName = "task_history_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -26,7 +27,7 @@ public class TaskHistory {
     private Task task;
 
     @Column(nullable = false)
-    private String statusChange;
+    private String change;
 
     @Column(nullable = false)
     private String changedBy;

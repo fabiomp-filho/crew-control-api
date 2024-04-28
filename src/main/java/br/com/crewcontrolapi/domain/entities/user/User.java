@@ -5,8 +5,6 @@ import br.com.crewcontrolapi.domain.entities.team.Team;
 import br.com.crewcontrolapi.enums.RoleEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
@@ -18,7 +16,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "member")
@@ -34,7 +35,8 @@ public class User implements Serializable, UserDetails {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq_generator")
+    @SequenceGenerator(name = "user_seq_generator", sequenceName = "user_seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false)
@@ -43,11 +45,9 @@ public class User implements Serializable, UserDetails {
     @Column(nullable = false)
     private String lastName;
 
-    @Email(message = "Informe um e-mail válido")
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Pattern(regexp = "^(\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2})|(\\d{11})$", message = "Informe um CPF válido!")
     @Column(unique = true, nullable = false)
     private String cpf;
 
@@ -56,6 +56,7 @@ public class User implements Serializable, UserDetails {
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private RoleEnum role;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)

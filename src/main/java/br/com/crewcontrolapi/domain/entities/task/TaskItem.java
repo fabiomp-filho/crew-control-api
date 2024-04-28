@@ -22,7 +22,8 @@ public class TaskItem implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "task_item_seq_generator")
+    @SequenceGenerator(name = "task_item_seq_generator", sequenceName = "task_item_seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false)
