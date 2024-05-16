@@ -1,8 +1,11 @@
 package br.com.crewcontrolapi.controllers;
 
+import br.com.crewcontrolapi.domain.dto.user.UserDTO;
 import br.com.crewcontrolapi.domain.dto.user.UserRegistrationDTO;
 import br.com.crewcontrolapi.domain.dto.user.UserUpdateDTO;
 import br.com.crewcontrolapi.domain.entities.user.User;
+import br.com.crewcontrolapi.exception.AccessDeniedException;
+import br.com.crewcontrolapi.exception.BusinessException;
 import br.com.crewcontrolapi.infra.security.TokenService;
 import br.com.crewcontrolapi.services.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +32,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> register(@Valid @RequestBody UserRegistrationDTO userRegistrationDTO, HttpServletRequest request) {
+    public ResponseEntity<String> register(@Valid @RequestBody UserRegistrationDTO userRegistrationDTO, HttpServletRequest request) {
         String token = tokenService.recoverToken(request);
         String role = tokenService.getUserRole(token);
 
@@ -39,14 +42,32 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO userUpdateDTO, HttpServletRequest request) {
+    public ResponseEntity<String> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO userUpdateDTO, HttpServletRequest request) {
 
         String token = tokenService.recoverToken(request);
         String username = tokenService.getUserLogin(token);
-        User user = (User) userService.loadUserByUsername(username);
+        User requestingUser = (User) userService.loadUserByUsername(username);
 
-        userService.updateUser(id, userUpdateDTO, user);
+        userService.updateUser(id, userUpdateDTO, requestingUser);
 
         return ResponseEntity.status(HttpStatus.OK).body("Usuário atualizado com sucesso!");
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            String token = tokenService.recoverToken(request);
+            String username = tokenService.getUserLogin(token);
+            User requestingUser = (User) userService.loadUserByUsername(username);
+
+            UserDTO userDTO = userService.getUserById(id, requestingUser);
+            return ResponseEntity.ok(userDTO);
+        } catch (BusinessException e) {
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(403).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
     }
 }

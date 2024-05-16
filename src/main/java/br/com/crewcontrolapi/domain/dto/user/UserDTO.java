@@ -13,11 +13,11 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class UserDTO {
 
+    private Long id;
     private String firstName;
     private String lastName;
     private String email;
     private String cpf;
-
     private RoleEnum role;
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate birthdate;
