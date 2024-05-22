@@ -1,11 +1,11 @@
 package br.com.crewcontrolapi.controllers;
 
 import br.com.crewcontrolapi.domain.dto.user.UserDTO;
-import br.com.crewcontrolapi.domain.dto.user.UserInfoDTO;
+import br.com.crewcontrolapi.domain.dto.user.UserTokenDTO;
 import br.com.crewcontrolapi.domain.dto.user.UserLoginDTO;
 import br.com.crewcontrolapi.domain.entities.user.User;
 import br.com.crewcontrolapi.infra.security.TokenService;
-import br.com.crewcontrolapi.services.UserService;
+import br.com.crewcontrolapi.services.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,11 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "auth-controller")
 public class AuthController {
 
-    private final UserService userService;
+    private final UserServiceImpl userService;
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
 
-    public AuthController(UserService userService, AuthenticationManager authenticationManager, TokenService tokenService) {
+    public AuthController(UserServiceImpl userService, AuthenticationManager authenticationManager, TokenService tokenService) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.tokenService = tokenService;
@@ -44,7 +44,7 @@ public class AuthController {
             Authentication auth = this.authenticationManager.authenticate(usernamePassword);
             String token = tokenService.generateToken((User) auth.getPrincipal());
             UserDTO userLogged = userService.getUser(userLoginDTO.getLogin());
-            UserInfoDTO userInfo = new UserInfoDTO(token, userLogged);
+            UserTokenDTO userInfo = new UserTokenDTO(token, userLogged);
             return ResponseEntity.status(HttpStatus.OK).body(userInfo);
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Falha na autenticação: " + e.getMessage());
